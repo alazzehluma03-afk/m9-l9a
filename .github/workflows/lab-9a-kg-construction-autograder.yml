@@ -48,11 +48,7 @@ jobs:
           echo "Fuseki did not come up"; exit 1
 
       - name: Load dataset
-        run: |
-          set +e
-          python load_dataset.py
-          echo "load_dataset exit: $?"
-          set -e
+        run: python load_dataset.py
 
       - name: Run autograder tests
         run: pytest tests/ -v --tb=short

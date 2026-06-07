@@ -158,6 +158,75 @@ def test_q2_handles_italian_skos_variants(g):
     )
 
 
+def test_q2_uses_altLabel_path():
+    """Force the SKOS altLabel path through q2 against a planted graph.
+
+    test_q2_handles_italian_skos_variants alone does not catch a prefLabel-
+    only query, because every cuisine in the learner's TTL has both labels
+    AND the ground-truth set is `:cuisine :Italian` directly — so a query
+    matching only on prefLabel returns the same recipes.
+
+    This test isolates the altLabel path. It builds a tiny graph with a
+    second cuisine whose only "Italian"/"italiano" match is via
+    skos:altLabel, plants a recipe that uses it, runs q2() against that
+    graph, and asserts the recipe is returned.
+    """
+    sparql = q2()
+    assert sparql.strip(), "q2() returned an empty string."
+
+    test_g = Graph()
+    test_g.parse(
+        data="""
+        @prefix : <http://aispire.example.org/recipes/> .
+        @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+        :Italian a :Cuisine ;
+            skos:prefLabel "Italian" ;
+            skos:altLabel  "italiano" .
+
+        :Mediterranean a :Cuisine ;
+            skos:prefLabel "Mediterranean" ;
+            skos:altLabel  "italiano" .
+
+        :basil a :Ingredient ;
+            skos:prefLabel "basil" .
+
+        :authorA a :Author ; :name "A" .
+
+        :prefRecipe a :Recipe ;
+            :name              "Pref match" ;
+            :cuisine           :Italian ;
+            :primaryIngredient :basil ;
+            :author            :authorA ;
+            :year              2020 .
+
+        :altRecipe a :Recipe ;
+            :name              "Alt-only match" ;
+            :cuisine           :Mediterranean ;
+            :primaryIngredient :basil ;
+            :author            :authorA ;
+            :year              2020 .
+        """,
+        format="turtle",
+    )
+
+    rows = list(test_g.query(sparql))
+    returned = {URIRef(str(r[0])) for r in rows}
+    alt_recipe = URIRef("http://aispire.example.org/recipes/altRecipe")
+    pref_recipe = URIRef("http://aispire.example.org/recipes/prefRecipe")
+
+    assert pref_recipe in returned, (
+        "q2 missed the recipe whose cuisine matches via skos:prefLabel "
+        "'Italian'. Make sure your query covers the prefLabel side."
+    )
+    assert alt_recipe in returned, (
+        "q2 missed the recipe whose cuisine matches Italian ONLY via "
+        "skos:altLabel 'italiano' (prefLabel is 'Mediterranean'). Filtering "
+        "only on skos:prefLabel silently drops altLabel-only entries — use "
+        "the prefLabel-OR-altLabel pattern from reading §7."
+    )
+
+
 def test_q3_filters_post_2020_with_ingredient(g):
     sparql = q3()
     assert sparql.strip(), "q3() returned an empty string."
@@ -187,6 +256,10 @@ def test_queries_agree_with_fuseki(g, fuseki_ready):
         pytest.skip("Fuseki not reachable on localhost:3030.")
     for label, fn in [("q1", q1), ("q2", q2), ("q3", q3)]:
         sparql = fn()
+        assert sparql.strip(), (
+            f"{label}() returned an empty string — implement it in queries.py "
+            f"before running the Fuseki round-trip check."
+        )
         local_count = len(list(g.query(sparql)))
         fuseki_count = len(_select_fuseki(sparql))
         assert local_count == fuseki_count, (

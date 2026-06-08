@@ -1,8 +1,9 @@
 """Autograder for Lab 9A — KG Construction.
 
-The repo root after Classroom acceptance contains recipes_partial.ttl,
-queries.py, load_dataset.py at the top level. These tests sys.path the
-repo root and import directly from there.
+Module 9 Week A uses a fork-and-submit flow (see FORK-SUBMIT.md). After
+the learner forks the template repo and clones their fork, the repo root
+contains recipes_partial.ttl, queries.py, and load_dataset.py at the top
+level. These tests sys.path the repo root and import directly from there.
 """
 
 import json
@@ -128,9 +129,30 @@ def test_q1_returns_all_recipes(g):
     sparql = q1()
     assert sparql.strip(), "q1() returned an empty string."
     rows = list(g.query(sparql))
-    assert len(rows) >= 15, f"q1 expected >= 15 rows; got {len(rows)}."
-    # Each row binds (?recipe, ?name).
     assert all(len(r) == 2 for r in rows), "q1 must SELECT ?recipe ?name."
+
+    # Ground truth: every :Recipe instance in the learner's TTL.
+    expected = set(g.subjects(predicate=NS.cuisine))
+    assert len(expected) >= 15, (
+        f"q1 ground truth: TTL must contain at least 15 :Recipe instances "
+        f"(found {len(expected)}). Extend recipes_partial.ttl to 15 recipes."
+    )
+    returned = {URIRef(str(r[0])) for r in rows}
+    assert returned == expected, (
+        f"q1 must return every :Recipe instance once. Common bug: a wildcard "
+        f"`SELECT ?s ?p WHERE { '{' } ?s ?p ?o { '}' }` happens to return >15 "
+        f"two-binding rows but is not a recipes query. Tighten the WHERE "
+        f"block to `?recipe a :Recipe ; :name ?name`."
+    )
+
+    # Verify the second binding is actually each recipe's :name (not some
+    # other predicate value that happens to bind two columns).
+    for recipe, name in rows:
+        recipe_uri = URIRef(str(recipe))
+        assert (recipe_uri, NS.name, name) in g, (
+            f"q1 row ({recipe}, {name}): the second binding is not the "
+            f"recipe's :name. Use `?recipe :name ?name` in the WHERE block."
+        )
 
 
 def test_q2_handles_italian_skos_variants(g):
@@ -245,6 +267,17 @@ def test_q3_filters_post_2020_with_ingredient(g):
         f"q3 returned {sorted(returned)}; expected {sorted(expected)}. "
         f"Check FILTER (?year > 2020) — note strict > not >=."
     )
+
+    # Verify the second binding is actually each recipe's :primaryIngredient
+    # (a learner whose query returns the right recipes paired with any other
+    # second variable still passes the set check above).
+    for recipe, ingredient in rows:
+        recipe_uri = URIRef(str(recipe))
+        assert (recipe_uri, NS.primaryIngredient, ingredient) in g, (
+            f"q3 row ({recipe}, {ingredient}): the second binding is not the "
+            f"recipe's :primaryIngredient. Use `?recipe :primaryIngredient "
+            f"?ingredient` in the WHERE block."
+        )
 
 
 # ------------------------------ Round-trip ------------------------------------

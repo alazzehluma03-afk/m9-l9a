@@ -14,10 +14,9 @@
     skos:prefLabel "Thai" ;
     skos:altLabel  "ไทย" .
 
-# TODO: add at least one more cuisine class with skos:prefLabel + skos:altLabel
-# so the 10 recipes you add can use a third cuisine. For Q2 in queries.py to
-# exercise the altLabel path, at least one recipe must use a cuisine whose
-# label only matches via skos:altLabel.
+:Mexican a :Cuisine ;
+    skos:prefLabel "Mexican" ;
+    skos:altLabel  "mejicano" .
 
 # ---- Ingredient classes (SKOS-labeled) ----
 
@@ -33,12 +32,15 @@
     skos:prefLabel "chili" ;
     skos:altLabel  "chile" .
 
+:cheese a :Ingredient ;
+    skos:prefLabel "cheese" ;
+    skos:altLabel  "formaggio" .
 # ---- Authors ----
 
 :authorAlice a :Author ; :name "Alice Romano" .
 :authorBruno a :Author ; :name "Bruno Tanaka" .
-
-# TODO: add a few more :Author resources for your recipes to reference.
+:authorCarlos a :Author ; :name "Carlos Santana" .
+:authorDiana a :Author ; :name "Diana Prince" .
 
 # ---- Recipes (5 pre-filled; extend to 15) ----
 
@@ -77,7 +79,72 @@
     :author            :authorBruno ;
     :year              2023 .
 
-# TODO: add 10 more recipes (recipe006..recipe015) following the same pattern.
-# Use a mix of years from 2015 through 2024 so the post-2020 query (Q3) has
-# interesting boundaries. At least one recipe must use a cuisine whose label
-# match only succeeds via skos:altLabel — Q2's autograder verifies this.
+:recipe006 a :Recipe ;
+    :name              "Tacos al Pastor" ;
+    :cuisine           :Mexican ;
+    :primaryIngredient :chili ;
+    :author            :authorCarlos ;
+    :year              2020 .
+
+:recipe007 a :Recipe ;
+    :name              "Quesadilla" ;
+    :cuisine           :Mexican ;
+    :primaryIngredient :cheese ;
+    :author            :authorCarlos ;
+    :year              2024 .
+
+:recipe008 a :Recipe ;
+    :name              "Margherita Pizza" ;
+    :cuisine           :Italian ;
+    :primaryIngredient :basil ;
+    :author            :authorAlice ;
+    :year              2015 .
+
+:recipe009 a :Recipe ;
+    :name              "Tom Yum Soup" ;
+    :cuisine           :Thai ;
+    :primaryIngredient :chili ;
+    :author            :authorBruno ;
+    :year              2021 .
+
+:recipe010 a :Recipe ;
+    :name              "Lasagna" ;
+    :cuisine           :Italian ;
+    :primaryIngredient :cheese ;
+    :author            :authorAlice ;
+    :year              2022 .
+
+:recipe011 a :Recipe ;
+    :name              "Enchiladas" ;
+    :cuisine           :Mexican ;
+    :primaryIngredient :chili ;
+    :author            :authorCarlos ;
+    :year              2017 .
+
+:recipe012 a :Recipe ;
+    :name              "Green Curry" ;
+    :cuisine           :Thai ;
+    :primaryIngredient :basil ;
+    :author            :authorBruno ;
+    :year              2016 .
+
+:recipe013 a :Recipe ;
+    :name              "Risotto" ;
+    :cuisine           :Italian ;
+    :primaryIngredient :cheese ;
+    :author            :authorDiana ;
+    :year              2023 .
+
+:recipe014 a :Recipe ;
+    :name              "Guacamole" ;
+    :cuisine           :Mexican ;
+    :primaryIngredient :chili ;
+    :author            :authorCarlos ;
+    :year              2019 .
+
+:recipe015 a :Recipe ;
+    :name              "Fettuccine Alfredo" ;
+    :cuisine           :Italian ;
+    :primaryIngredient :cheese ;
+    :author            :authorDiana ;
+    :year              2024 .
